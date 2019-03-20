@@ -16,31 +16,57 @@ def get_array(str_nums):
 
 def combination_finder(lst, target):
     all_nums_lst = lst.copy()
-    combination_lst = []
-    subset_sum(lst, target, combination_lst)
+    unique_lst = lst.copy()
+    original_nums_map = {}
     
-    nums_set = set() 
+    for num in lst:
+        original_nums_map[num] = num
+
+    while True:
+        quantity_dict = {}
+        for num in unique_lst:
+            quantity_dict[num] = quantity_dict.get(num, 0) + 1
+
+        unique_lst = []
+        for key in quantity_dict:
+            if quantity_dict[key] > 1:
+                for map_key in original_nums_map:
+                    if original_nums_map[map_key] == key:
+                        original_nums_map[map_key] = key * quantity_dict[key]
+            unique_lst.append(key * quantity_dict[key])
+
+        if len(set(unique_lst)) == len(quantity_dict):
+            break
+    
+    combination_lst = []
+    subset_sum(unique_lst.copy(), target, combination_lst)
+    print(combination_lst)
+    orig_nums_set = set()
     for lst in combination_lst:
-        nums_set.update(lst)    
+        orig_nums_set.update(lst)
+
+    nums_set = set()
+    for num in orig_nums_set:
+        for key in original_nums_map:
+            if original_nums_map[key] == num:
+                nums_set.add(key)
 
     not_used_set = set()
     for num in all_nums_lst:
         if not num in nums_set:      
             not_used_set.add(num)
-    
+
     guaranteed_set = set()
-    exclusions_set = set()
-    for num in all_nums_lst:
+    for num in unique_lst:
         count = 0
         for lst in combination_lst:
             if num in lst:
                 count += 1
+        
         if count == len(combination_lst):
-            if num in guaranteed_set: 
-                exclusions_set.add(num)
-                guaranteed_set.remove(num)
-            elif not num in exclusions_set:
-                guaranteed_set.add(num)
+            for key in original_nums_map:
+                if original_nums_map[key] == num:
+                    guaranteed_set.add(key)
 
     return not_used_set, guaranteed_set
 
@@ -82,6 +108,8 @@ def solver(size, row_targets, col_targets, nums):
                     if solution[r,i] == 0: 
                         del_indices_lst.append(i)
                     elif guaranteed[r,i] == 1:
+                        guaranteed_sum += nums[r,i]
+                        del_indices_lst.append(i)
                         guaranteed_sum += nums[r,i]
                         del_indices_lst.append(i)
                 
@@ -131,5 +159,3 @@ if __name__ == "__main__":
     print(nums)
     
     solved = solver(size, row_targets, col_targets, nums)
-    print(solved)
-
