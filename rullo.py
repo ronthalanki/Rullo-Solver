@@ -19,10 +19,8 @@ def solver(size, row_targets, col_targets, nums, verbose = False):
     solution = np.array([[1 for _ in range(size)] for _ in range(size)])
     guaranteed = np.array([[0 for _ in range(size)] for _ in range(size)])
 
-    solved = solver_helper(size, row_targets, col_targets, nums, solution, guaranteed, verbose)
     #TODO: write a loop that recursively guesses until we get a solved puzzle or tries a new guess from the original solution if the recursive guesses lead to an invalid result, how do we optimize the guessing strategy to take advantage of probability of being correct
-    if not check_solution(size, row_targets, col_targets, solved, nums):
-        solved = solver_helper(size, row_targets, col_targets, nums, solution, guaranteed, verbose)
+    solved = solver_helper(size, row_targets, col_targets, nums, solution, guaranteed, verbose)
     return solved
 
 def solver_helper(size, row_targets, col_targets, nums, solution, guaranteed, verbose):
@@ -77,15 +75,26 @@ def solver_helper(size, row_targets, col_targets, nums, solution, guaranteed, ve
                         has_changed = True
             else:
                 guaranteed[:,c] = solution[:,c]
-    return solution
-
+                
+    if check_solution(size, row_targets, col_targets, solution, nums):
+        return solution
+    else:
+        for r in range(size):
+            for c in range(size):
+                if solution[r,c] == 1 and guaranteed[r,c] != 1:
+                    solution_copy = solution.copy()
+                    guaranteed_copy = guaranteed.copy()
+                    solution_copy[r,c] = 0
+                    
+                    if check_valid(size, row_targets, col_targets, solution_copy, nums):
+                        return solver_helper(size, row_targets, col_targets, nums, solution_copy, guaranteed_copy, verbose)
 
 def check_valid(size, row_targets, col_targets, solution, nums):
     vals = nums * solution
     row = np.sum(vals, axis=1) - row_targets
     col = np.sum(vals, axis=0) - col_targets
-    b1 = len(row[row < 0]) == 0
-    b2 = len(col[col < 0]) == 0
+    b1 = (len(row[row < 0]) == 0)
+    b2 = (len(col[col < 0]) == 0)
     return b1 and b2
 
 def check_solution(size, row_targets, col_targets, solution, nums):
@@ -97,12 +106,13 @@ def check_solution(size, row_targets, col_targets, solution, nums):
     return b1 and b2
 
 if __name__ == "__main__":
-    size, row_targets, col_targets, nums = input("8-medium-hard")
-    solved = solver(size, row_targets, col_targets, nums, True)
-    
+    size, row_targets, col_targets, nums = input("9-large-hard")
+    solved = solver(size, row_targets, col_targets, nums)
+     
     print(size)
     print(row_targets)
     print(col_targets)
     print(nums)
     print("\n")
     print(solved)
+    print(check_solution(size, row_targets, col_targets, solved, nums))
